@@ -22,5 +22,9 @@ namespace editor {
                 graphics::DrawText(graphics::font, 16, 20 + (i * 8), script_lines[i], 255, 0, 255, false);
             }
         }
+
+        for (int i = 0; i < (int)input::cursors.size(); i++) { // For all cursors...
+            graphics::DrawText(graphics::font, 16 + (input::cursors[i].position * 8), 20 + (input::cursors[i].line * 8), "_", 255, 0, 255, false);
+        }
     }
 }

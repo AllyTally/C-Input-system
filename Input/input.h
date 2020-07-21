@@ -13,6 +13,7 @@ namespace input {
     struct cursor {
         int position;
         int line;
+        int highest_position;
     };
     extern bool taking_input;
     extern int current_scroll;
@@ -24,6 +25,11 @@ namespace input {
     void StartInput(std::vector<std::string>* text);
     void HandleEvents(SDL_Event e);
     void InsertText(std::string text);
+    void InsertNewline();
+    void MoveCursorUp();
+    void MoveCursorDown();
+    void MoveCursorLeft();
+    void MoveCursorRight();
 }
 
 #endif
