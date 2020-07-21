@@ -23,6 +23,7 @@ namespace input {
     void Logic();
     void StartInput(std::vector<std::string>* text);
     void HandleEvents(SDL_Event e);
+    void InsertText(std::string text);
 }
 
 #endif
