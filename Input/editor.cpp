@@ -23,7 +23,8 @@ namespace editor {
             }
         }
 
-        for (int i = 0; i < (int)input::cursors.size(); i++) { // For all cursors...
+        //Draw cursors
+        for (int i = 0; i < (int)input::cursors.size(); i++) {
             graphics::DrawText(graphics::font, 16 + (input::cursors[i].position * 8), 20 + (input::cursors[i].line * 8), "_", 255, 0, 255, false);
         }
     }

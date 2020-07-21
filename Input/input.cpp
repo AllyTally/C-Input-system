@@ -6,6 +6,7 @@
 #include <string>
 #include <vector>
 
+// utf8::unchecked::distance(str.begin(), str.end()) - leo
 
 namespace input {
     bool taking_input;
@@ -134,7 +135,9 @@ namespace input {
             }
             else if (e.key.keysym.sym == SDLK_v && SDL_GetModState() & KMOD_CTRL)
             {
-                InsertText(SDL_GetClipboardText());
+                char* heck = SDL_GetClipboardText();
+                InsertText(heck);
+                SDL_free(heck);
             }
             else if (e.key.keysym.sym == SDLK_RETURN) {
                 InsertNewline();

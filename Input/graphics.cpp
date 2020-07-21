@@ -17,12 +17,12 @@ namespace graphics {
     bool DrawText(TTF_Font* font, int x, int y, std::string text, int r, int g, int b, int a) {
         SDL_Color color = { (Uint8) r, (Uint8) g, (Uint8) b };  // this is the color in rgb format, maxing out all would give you the color white, and it will be your text's color
 
-        SDL_Surface* surface_text = TTF_RenderText_Solid(font, text.c_str(), color); // as TTF_RenderText_Solid could only be used on SDL_Surface then you have to create the surface first
+        SDL_Surface* surface_text = TTF_RenderUTF8_Solid(font, text.c_str(), color); // as TTF_RenderText_Solid could only be used on SDL_Surface then you have to create the surface first
 
         SDL_Texture* texture_text = SDL_CreateTextureFromSurface(g_renderer, surface_text); //now you can convert it into a texture
 
         int w, h;
-        TTF_SizeText(font, text.c_str(), &w, &h);
+        TTF_SizeUTF8(font, text.c_str(), &w, &h);
 
         SDL_Rect text_rect; //create a rect
         text_rect.x = x;  //controls the rect's x coordinate
