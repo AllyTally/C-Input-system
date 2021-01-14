@@ -21,6 +21,10 @@ namespace graphics
     bool DrawText(TTF_Font* font, int x, int y, std::string text, int r, int g, int b);
     void DrawTextBordered(TTF_Font* font, int x, int y, std::string text, int r, int g, int b, int a);
     void DrawTextBordered(TTF_Font* font, int x, int y, std::string text, int r, int g, int b);
+    void DrawRectangle(int x, int y, int w, int h, int r, int g, int b, int a);
+    void DrawRectangle(int x, int y, int w, int h, int r, int g, int b);
+    void DrawRectangleOutline(int x, int y, int w, int h, int r, int g, int b, int a);
+    void DrawRectangleOutline(int x, int y, int w, int h, int r, int g, int b);
 }
 
 #endif

@@ -57,4 +57,30 @@ namespace graphics {
     void DrawTextBordered(TTF_Font* font, int x, int y, std::string text, int r, int g, int b) {
         DrawTextBordered(font, x, y, text, r, g, b, 255);
     }
+
+    void DrawRectangle(int x, int y, int w, int h, int r, int g, int b, int a) {
+        SDL_SetRenderDrawColor(g_renderer, r, g, b, a);
+        SDL_Rect rectangle;
+        rectangle.x = x;
+        rectangle.y = y;
+        rectangle.w = w;
+        rectangle.h = h;
+        SDL_RenderFillRect(g_renderer, &rectangle);
+    }
+    void DrawRectangle(int x, int y, int w, int h, int r, int g, int b) {
+        DrawRectangle(x, y, w, h, r, g, b, 255);
+    }
+
+    void DrawRectangleOutline(int x, int y, int w, int h, int r, int g, int b, int a) {
+        SDL_SetRenderDrawColor(g_renderer, r, g, b, a);
+        SDL_Rect rectangle;
+        rectangle.x = x;
+        rectangle.y = y;
+        rectangle.w = w;
+        rectangle.h = h;
+        SDL_RenderDrawRect(g_renderer, &rectangle);
+    }
+    void DrawRectangleOutline(int x, int y, int w, int h, int r, int g, int b) {
+        DrawRectangle(x, y, w, h, r, g, b, 255);
+    }
 }
