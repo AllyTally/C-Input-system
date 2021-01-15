@@ -56,14 +56,18 @@ namespace input {
                 }
             }
             cursors[i].highest_position = cursors[i].position; // Update highest_position
-
         }
     }
 
     void InsertNewline() { // The user pressed enter!
         for (int i = 0; i < (int)cursors.size(); i++) { // For all cursors...
+            for (int j = 0; j < (int)cursors.size(); j++) { // For all cursors... (again...)
+                if (cursors[j].line >= cursors[i].line + 1) {
+                    cursors[j].line++; // Shift the cursors which are after the newline
+                }
+            }
             std::string first_part  = (*current_text)[cursors[i].line].substr(0, cursors[i].position);
-            std::string second_part = (*current_text)[cursors[i].line].substr(cursors[i].position, (*current_text)[cursors[i].line].length());
+            std::string second_part = (*current_text)[cursors[i].line].substr(cursors[i].position, std::string::npos);
             (*current_text)[cursors[i].line] = first_part;
             (*current_text).insert((*current_text).begin() + cursors[i].line + 1,second_part);
             cursors[i].line++;
@@ -102,30 +106,50 @@ namespace input {
     }
 
     void MoveCursorUp() {
+        if ((SDL_GetModState() & (KMOD_ALT)) && (SDL_GetModState() & (KMOD_SHIFT))) {
+            cursor temp = cursors[0];
+            cursors.push_back(temp);
+            if (cursors[0].line > 0) cursors[0].line--;
+            cursors[0].position = cursors[0].highest_position;
+            if (cursors[0].position > (*current_text)[cursors[0].line].length()) cursors[0].position = (*current_text)[cursors[0].line].length();
+            return;
+        }
         bool reset = CheckIfShiftHeld();  // Only returns true if you don't hold shift
-        cursors.resize(1);
+        if (!selecting) cursors.resize(1);
         if (reset && (cursors[0].line > cursors[0].started_selection_line)) {
             cursors[0].line = cursors[0].started_selection_line;
         }
-        if (cursors[0].line > 0) cursors[0].line--;
-        cursors[0].position = cursors[0].highest_position;
-        if (cursors[0].position > (*current_text)[cursors[0].line].length()) cursors[0].position = (*current_text)[cursors[0].line].length();
+        for (int i = 0; i < (int)cursors.size(); i++) { // For all cursors...
+            if (cursors[i].line > 0) cursors[i].line--;
+            cursors[i].position = cursors[i].highest_position;
+            if (cursors[i].position > (*current_text)[cursors[i].line].length()) cursors[i].position = (*current_text)[cursors[i].line].length();
+        }
     }
 
     void MoveCursorDown() {
+        if ((SDL_GetModState() & (KMOD_ALT)) && (SDL_GetModState() & (KMOD_SHIFT))) {
+            cursor temp = cursors[0];
+            cursors.push_back(temp);
+            if (cursors[0].line < (*current_text).size() - 1) cursors[0].line++;
+            cursors[0].position = cursors[0].highest_position;
+            if (cursors[0].position > (*current_text)[cursors[0].line].length()) cursors[0].position = (*current_text)[cursors[0].line].length();
+            return;
+        }
         bool reset = CheckIfShiftHeld();  // Only returns true if you don't hold shift
-        cursors.resize(1);
+        if (!selecting) cursors.resize(1);
         if (reset && (cursors[0].line < cursors[0].started_selection_line)) {
             cursors[0].line = cursors[0].started_selection_line;
         }
-        if (cursors[0].line < (*current_text).size() - 1) cursors[0].line++;
-        cursors[0].position = cursors[0].highest_position;
-        if (cursors[0].position > (*current_text)[cursors[0].line].length()) cursors[0].position = (*current_text)[cursors[0].line].length();
+        for (int i = 0; i < (int)cursors.size(); i++) { // For all cursors...
+            if (cursors[i].line < (*current_text).size() - 1) cursors[i].line++;
+            cursors[i].position = cursors[i].highest_position;
+            if (cursors[i].position > (*current_text)[cursors[i].line].length()) cursors[i].position = (*current_text)[cursors[i].line].length();
+        }
     }
 
     void MoveCursorLeft() {
         bool reset = CheckIfShiftHeld();  // Only returns true if you don't hold shift
-        cursors.resize(1);
+        if (!selecting) cursors.resize(1);
         if (reset) {
             if (cursors[0].position > cursors[0].started_selection_position) {
                 cursors[0].position = cursors[0].started_selection_position;
@@ -133,21 +157,24 @@ namespace input {
             }
             return;
         }
-        if (cursors[0].position > 0) {
-            cursors[0].position--;
-            cursors[0].highest_position = cursors[0].position;
-        } else {
-            if (cursors[0].line > 0) {
-                cursors[0].line--;
-                cursors[0].position = (*current_text)[cursors[0].line].length();
-                cursors[0].highest_position = cursors[0].position;
+        for (int i = 0; i < (int)cursors.size(); i++) { // For all cursors...
+            if (cursors[i].position > 0) {
+                cursors[i].position--;
+                cursors[i].highest_position = cursors[0].position;
+            }
+            else {
+                if (cursors[i].line > 0) {
+                    cursors[i].line--;
+                    cursors[i].position = (*current_text)[cursors[i].line].length();
+                    cursors[i].highest_position = cursors[i].position;
+                }
             }
         }
     }
 
     void MoveCursorRight() {
         bool reset = CheckIfShiftHeld();  // Only returns true if you don't hold shift
-        cursors.resize(1);
+        if (!selecting) cursors.resize(1);
         if (reset) {
             if (cursors[0].position < cursors[0].started_selection_position) {
                 cursors[0].position = cursors[0].started_selection_position;
@@ -155,20 +182,23 @@ namespace input {
             }
             return;
         }
-        if (cursors[0].position < (*current_text)[cursors[0].line].length()) {
-            cursors[0].position++;
-            cursors[0].highest_position = cursors[0].position;
-        } else {
-            if (cursors[0].line < (*current_text).size() - 1) {
-                cursors[0].line++;
-                cursors[0].position = 0;
-                cursors[0].highest_position = 0;
+        for (int i = 0; i < (int)cursors.size(); i++) { // For all cursors...
+            if (cursors[i].position < (*current_text)[cursors[i].line].length()) {
+                cursors[i].position++;
+                cursors[i].highest_position = cursors[i].position;
+            }
+            else {
+                if (cursors[i].line < (*current_text).size() - 1) {
+                    cursors[i].line++;
+                    cursors[i].position = 0;
+                    cursors[i].highest_position = 0;
+                }
             }
         }
     }
 
-    std::string GetSelectedText() {
-        rect positions = ReorderSelectionPositions();
+    std::string GetSelectedText(int cursor) {
+        rect positions = ReorderSelectionPositions(cursor);
 
         if (positions.y == positions.y2) {
             return (*current_text)[positions.y].substr(positions.x, positions.x2 - positions.x);
@@ -186,56 +216,83 @@ namespace input {
         return return_string;
     }
 
+    std::string GetAllSelectedText() {
+        std::string builder;
+        for (int i = 0; i < (int)cursors.size(); i++) { // For all cursors...
+            builder += GetSelectedText(i);
+            if (i != cursors.size() - 1) {
+                builder += "\n";
+            }
+        }
+        return builder;
+    }
+
     void RemoveCharacters(int x, int y, int x2, int y2) {
         std::string rest_of_string = (*current_text)[y2].substr(x2,std::string::npos); // Get the rest of the last line
-        for (int j = y2; j > y; j--) {
-            (*current_text).erase((*current_text).begin() + j); // Remove the current line
+        for (int i = y2; i > y; i--) {
+            for (int j = 0; j < (int)cursors.size(); j++) { // For all cursors...
+                if (cursors[j].line >= i) {
+                    cursors[j].line--;
+                }
+                if (cursors[j].started_selection_line >= i) {
+                    cursors[j].started_selection_line--;
+                }
+            }
+            (*current_text).erase((*current_text).begin() + i); // Remove the current line
         }
         (*current_text)[y].erase(x, std::string::npos);
         (*current_text)[y] += rest_of_string;
     }
 
-    rect ReorderSelectionPositions() {
+    rect ReorderSelectionPositions(int cursor) {
         rect positions;
         bool in_front = false;
-        if (input::cursors[0].line > input::cursors[0].started_selection_line) {
+        if (input::cursors[cursor].line > input::cursors[cursor].started_selection_line) {
             in_front = true;
         }
-        else if (input::cursors[0].line == input::cursors[0].started_selection_line) {
-            if (input::cursors[0].position >= input::cursors[0].started_selection_position) {
+        else if (input::cursors[cursor].line == input::cursors[cursor].started_selection_line) {
+            if (input::cursors[cursor].position >= input::cursors[cursor].started_selection_position) {
                 in_front = true;
             }
         }
 
         if (in_front) {
-            positions.x = cursors[0].started_selection_position;
-            positions.x2 = cursors[0].position;
-            positions.y = cursors[0].started_selection_line;
-            positions.y2 = cursors[0].line;
+            positions.x = cursors[cursor].started_selection_position;
+            positions.x2 = cursors[cursor].position;
+            positions.y = cursors[cursor].started_selection_line;
+            positions.y2 = cursors[cursor].line;
         }
         else {
-            positions.x = cursors[0].position;
-            positions.x2 = cursors[0].started_selection_position;
-            positions.y = cursors[0].line;
-            positions.y2 = cursors[0].started_selection_line;
+            positions.x = cursors[cursor].position;
+            positions.x2 = cursors[cursor].started_selection_position;
+            positions.y = cursors[cursor].line;
+            positions.y2 = cursors[cursor].started_selection_line;
         }
         return positions;
     }
 
     void RemoveSelectionCharacters() {
-        rect positions = ReorderSelectionPositions();
-        cursors[0].position = positions.x;
-        cursors[0].highest_position = positions.x;
-        cursors[0].line = positions.y;
-        RemoveCharacters(positions.x, positions.y, positions.x2, positions.y2);
+        for (int i = 0; i < (int)cursors.size(); i++) { // For all cursors...
+            rect positions = ReorderSelectionPositions(i);
+            cursors[i].position = positions.x;
+            cursors[i].highest_position = positions.x;
+            cursors[i].line = positions.y;
+            RemoveCharacters(positions.x, positions.y, positions.x2, positions.y2);
+        }
         selecting = false;
     }
 
     void Backspace() { // The user pressed backspace!
         for (int i = 0; i < (int)cursors.size(); i++) { // For all cursors...
             if (cursors[i].position == 0) { // If we're right at the start of the newline...
-                if (cursors[i].line == 0) return; // Don't do anything if it's at the start of the file.
+                if (cursors[i].line == 0) continue; // Don't do anything if it's at the start of the file.
                 // Great! Now we need to merge the two lines...
+                for (int j = 0; j < (int)cursors.size(); j++) { // For all cursors... (again...)
+                    if (i == j) continue;
+                    if (cursors[j].line >= cursors[i].line) {
+                        cursors[j].line--; // Shift the cursors which are after the removed line
+                    }
+                }
                 int current_size = (*current_text)[cursors[i].line - 1].length(); // Save the length of the previous line
                 (*current_text)[cursors[i].line - 1] += (*current_text)[cursors[i].line]; // Add the current line to the previous line
                 (*current_text).erase((*current_text).begin() + cursors[i].line); // Remove the current line
@@ -245,12 +302,33 @@ namespace input {
                 cursors[i].highest_position = current_size;
 
             } else {
+                for (int j = 0; j < (int)cursors.size(); j++) { // For all cursors... (again...)
+                    if (i == j) continue;
+                    if (cursors[j].line != cursors[i].line) continue;
+                    if (cursors[j].position >= cursors[i].position) {
+                        cursors[j].position--; // Shift the cursors which are after the removed letter
+                    }
+                }
                 (*current_text)[cursors[i].line].erase(cursors[i].position - 1, 1); // Delete the character before the cursor
                 cursors[i].position--; // Move the cursor back one
                 cursors[i].highest_position = cursors[i].position;
             }
         }
     }
+
+    void RemoveDuplicateCursors() {
+        for (int i = (int)cursors.size() - 1; i >= 0; i--) {
+            for (int j = (int)cursors.size() - 1; j >= 0; j--) {
+                if (i >= cursors.size()) continue;
+                if (i == j) continue;
+                if (cursors[i].line != cursors[j].line) continue;
+                if (cursors[i].position == cursors[j].position) {
+                    cursors.erase(cursors.begin() + j);
+                }
+            }
+        }
+    }
+
 
     void HandleEvents(SDL_Event e) {
         if (!taking_input) return;
@@ -275,11 +353,11 @@ namespace input {
             }
             else if (e.key.keysym.sym == SDLK_c && SDL_GetModState() & KMOD_CTRL)
             {
-                SDL_SetClipboardText(GetSelectedText().c_str());
+                SDL_SetClipboardText(GetAllSelectedText().c_str());
             }
             else if (e.key.keysym.sym == SDLK_x && SDL_GetModState() & KMOD_CTRL)
             {
-                SDL_SetClipboardText(GetSelectedText().c_str());
+                SDL_SetClipboardText(GetAllSelectedText().c_str());
                 RemoveSelectionCharacters();
             }
             else if (e.key.keysym.sym == SDLK_a && SDL_GetModState() & KMOD_CTRL) {
@@ -300,6 +378,7 @@ namespace input {
             else if (e.key.keysym.sym == SDLK_RIGHT) {
                 MoveCursorRight();
             }
+            RemoveDuplicateCursors();
         }
         //Special text input event
         else if (e.type == SDL_TEXTINPUT)
@@ -309,6 +388,7 @@ namespace input {
                 RemoveSelectionCharacters();
             }
             InsertText(e.text.text);
+            RemoveDuplicateCursors();
         }
     }
 }

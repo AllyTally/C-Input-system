@@ -40,9 +40,10 @@ namespace input {
     void MoveCursorDown();
     void MoveCursorLeft();
     void MoveCursorRight();
-    std::string GetSelectedText();
+    std::string GetSelectedText(int cursor);
+    std::string GetAllSelectedText();
     void RemoveCharacters(int x, int y, int x2, int y2);
-    rect ReorderSelectionPositions();
+    rect ReorderSelectionPositions(int cursor);
     void RemoveSelectionCharacters();
 }
 

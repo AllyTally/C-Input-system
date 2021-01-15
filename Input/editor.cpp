@@ -63,5 +63,6 @@ namespace editor {
                 graphics::DrawText(graphics::font, 16, 20 + (i * 8), script_lines[i], 255, 0, 255, false);
             }
         }
+        graphics::DrawText(graphics::font, 0, 0, std::to_string(input::cursors.size()), 255, 0, 255);
     }
 }
