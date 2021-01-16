@@ -14,6 +14,7 @@ namespace input {
     bool taking_input;
     int current_scroll;
     bool selecting;
+    bool cursor_spawn_up;
     std::vector<std::string>* current_text;
     std::vector<cursor> cursors;
 
@@ -52,27 +53,31 @@ namespace input {
                 (*current_text)[cursors[i].line].insert(cursors[i].position, output); // Insert the current line of text into our text
                 cursors[i].position += output.length(); // Update cursor position
                 if (!string_stream.eof()) { // If we haven't hit the end of the file,
-                    InsertNewline(); // Insert a newline
+                    InsertNewlineSingleCursor(i); // Insert a newline
                 }
             }
             cursors[i].highest_position = cursors[i].position; // Update highest_position
         }
     }
 
+    void InsertNewlineSingleCursor(int i) {
+        for (int j = 0; j < (int)cursors.size(); j++) { // For all cursors...
+            if (cursors[j].line >= cursors[i].line + 1) {
+                cursors[j].line++; // Shift the cursors which are after the newline
+            }
+        }
+        std::string first_part = (*current_text)[cursors[i].line].substr(0, cursors[i].position);
+        std::string second_part = (*current_text)[cursors[i].line].substr(cursors[i].position, std::string::npos);
+        (*current_text)[cursors[i].line] = first_part;
+        (*current_text).insert((*current_text).begin() + cursors[i].line + 1, second_part);
+        cursors[i].line++;
+        cursors[i].position = 0;
+        cursors[i].highest_position = 0;
+    }
+
     void InsertNewline() { // The user pressed enter!
         for (int i = 0; i < (int)cursors.size(); i++) { // For all cursors...
-            for (int j = 0; j < (int)cursors.size(); j++) { // For all cursors... (again...)
-                if (cursors[j].line >= cursors[i].line + 1) {
-                    cursors[j].line++; // Shift the cursors which are after the newline
-                }
-            }
-            std::string first_part  = (*current_text)[cursors[i].line].substr(0, cursors[i].position);
-            std::string second_part = (*current_text)[cursors[i].line].substr(cursors[i].position, std::string::npos);
-            (*current_text)[cursors[i].line] = first_part;
-            (*current_text).insert((*current_text).begin() + cursors[i].line + 1,second_part);
-            cursors[i].line++;
-            cursors[i].position = 0;
-            cursors[i].highest_position = 0;
+            InsertNewlineSingleCursor(i);
         }
     }
 
@@ -107,8 +112,11 @@ namespace input {
 
     void MoveCursorUp() {
         if ((SDL_GetModState() & (KMOD_ALT)) && (SDL_GetModState() & (KMOD_SHIFT))) {
-            cursor temp = cursors[0];
-            cursors.push_back(temp);
+            if (cursors.size() == 1 || cursor_spawn_up) {
+                cursor_spawn_up = true;
+                cursor temp = cursors[0];
+                cursors.push_back(temp);
+            }
             if (cursors[0].line > 0) cursors[0].line--;
             cursors[0].position = cursors[0].highest_position;
             if (cursors[0].position > (*current_text)[cursors[0].line].length()) cursors[0].position = (*current_text)[cursors[0].line].length();
@@ -128,8 +136,11 @@ namespace input {
 
     void MoveCursorDown() {
         if ((SDL_GetModState() & (KMOD_ALT)) && (SDL_GetModState() & (KMOD_SHIFT))) {
-            cursor temp = cursors[0];
-            cursors.push_back(temp);
+            if (cursors.size() == 1 || !cursor_spawn_up) {
+                cursor_spawn_up = false;
+                cursor temp = cursors[0];
+                cursors.push_back(temp);
+            }
             if (cursors[0].line < (*current_text).size() - 1) cursors[0].line++;
             cursors[0].position = cursors[0].highest_position;
             if (cursors[0].position > (*current_text)[cursors[0].line].length()) cursors[0].position = (*current_text)[cursors[0].line].length();
@@ -317,13 +328,21 @@ namespace input {
     }
 
     void RemoveDuplicateCursors() {
+        if (cursors.size() == 1) return;
         for (int i = (int)cursors.size() - 1; i >= 0; i--) {
             for (int j = (int)cursors.size() - 1; j >= 0; j--) {
                 if (i >= cursors.size()) continue;
                 if (i == j) continue;
-                if (cursors[i].line != cursors[j].line) continue;
-                if (cursors[i].position == cursors[j].position) {
+                if ((cursors[i].line == cursors[j].line) && (cursors[i].position == cursors[j].position)) {
+                    if (j == 0) continue; // J is the one that gets removed, and we don't want to remove the first cursor.
                     cursors.erase(cursors.begin() + j);
+                }
+                if (selecting) {
+                    if ((cursors[j].line == cursors[i].started_selection_line) && (cursors[j].position = cursors[i].started_selection_position)) {
+                        cursors[i].started_selection_line = cursors[j].started_selection_line;
+                        cursors[i].started_selection_position = cursors[j].started_selection_position;
+                        cursors.erase(cursors.begin() + j);
+                    }
                 }
             }
         }
@@ -347,6 +366,9 @@ namespace input {
             }
             else if (e.key.keysym.sym == SDLK_v && SDL_GetModState() & KMOD_CTRL)
             {
+                if (selecting) {
+                    RemoveSelectionCharacters();
+                }
                 char* heck = SDL_GetClipboardText();
                 InsertText(heck);
                 SDL_free(heck);

@@ -23,6 +23,7 @@ namespace input {
         int x2;
         int y2;
     };
+
     extern bool taking_input;
     extern int current_scroll;
     extern bool selecting;
@@ -34,6 +35,7 @@ namespace input {
     void StartInput(std::vector<std::string>* text);
     void HandleEvents(SDL_Event e);
     void InsertText(std::string text);
+    void InsertNewlineSingleCursor(int i);
     void InsertNewline();
     int CheckIfShiftHeld();
     void MoveCursorUp();

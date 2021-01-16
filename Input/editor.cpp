@@ -54,6 +54,7 @@ namespace editor {
             }
             graphics::DrawText(graphics::font, 16 + (input::cursors[i].position * 8), 20 + (input::cursors[i].line * 8), "_", 255, 0, 255, false);
         }
+        graphics::DrawText(graphics::font, 16 + (input::cursors[0].position * 8), 20 + (input::cursors[0].line * 8), "_", 255, 0, 0, false);
 
         //Draw text
         for (int i = 0; i < 25; i++)
